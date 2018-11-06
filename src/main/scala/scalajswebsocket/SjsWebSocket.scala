@@ -36,10 +36,10 @@ object WebSocketClient {
           }) >>=
             (q.enqueue1(_))
 
-        socket.onmessage = (m) => {println("onmessage"); handler(m).toIO.unsafeRunAsyncAndForget()}
+        socket.onmessage = (m) => handler(m).toIO.unsafeRunAsyncAndForget()
         //once open, further errors are treated as a Close on the queue of frames, there's little else to do but close the socket
-        socket.onerror = (e: Event) => {println("onerror"); q.enqueue1(Close(1002, "onerror")).toIO.unsafeRunAsyncAndForget()}
-        socket.onclose = (e: Event) => {println("onclose"); q.enqueue1(Close(1000, "onclose")).toIO.unsafeRunAsyncAndForget()}
+        socket.onerror = (e: Event) => q.enqueue1(Close(1002, "onerror")).toIO.unsafeRunAsyncAndForget()
+        socket.onclose = (e: Event) => q.enqueue1(Close(1000, "onclose")).toIO.unsafeRunAsyncAndForget()
         k(Right(Right(sjssocket)))
       }
 
