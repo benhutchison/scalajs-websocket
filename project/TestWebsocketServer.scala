@@ -28,14 +28,14 @@ object TestWebsocketServer extends Http4sDsl[IO]  {
   def start(): Unit = {
     if (runningServer.isEmpty) {
       runningServer = Some(TestWebsocketServer.start(Port))
-      println(s"started TestWebsocketServer on $Port: $runningServer")
+      println(s"Started TestWebsocketServer on $Port: $runningServer")
     }
     else
       ()
   }
 
   def stop(): Unit = {
-    println(s"stopping TestWebsocketServer on $Port")
+    println(s"Stopping TestWebsocketServer on $Port")
     runningServer.foreach(_.cancel)
     runningServer = None
   }
@@ -46,11 +46,12 @@ object TestWebsocketServer extends Http4sDsl[IO]  {
 
     case GET -> Root / "testws" =>
       val echoReply: Pipe[IO, WebSocketFrame, WebSocketFrame] =
-        _.collect {
-          case Text("Close", _) => Close()
-          case Text("Error", _) => throw new Exception("TestWebsocketServer introduced error")
-          case other => other
-        }
+        _.flatMap({
+          case Text("Close", _) => Stream(Close())
+          case Text("Error", _) => Stream.raiseError[IO](new Exception("TestWebsocketServer introduced error"))
+          case t@Text("DelayMinute", _) => Stream(Text("DelayMinute", true)).delayBy[IO](1 minute)
+          case other => Stream(other)
+        })
 
       Queue.unbounded[IO, WebSocketFrame].flatMap { q =>
         val d = q.dequeue.through(echoReply)

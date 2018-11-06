@@ -1,0 +1,13 @@
+language: scala
+scala:
+   - 2.12.7
+
+jdk:
+ - oraclejdk8
+ - oraclejdk9
+ - openjdk11
+
+cache:
+  directories:
+    - $HOME/.ivy2/cache
+    - $HOME/.sbt
